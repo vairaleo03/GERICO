@@ -1,26 +1,20 @@
 require('dotenv').config();
 const express = require('express');
-const http = require('http'); // Importa il modulo HTTP
+const http = require('http');
 const mongoose = require('mongoose');
 const session = require('express-session');
 const passport = require('passport');
 const cors = require('cors');
-const socketIO = require('socket.io'); // Importa Socket.IO
+const socketIO = require('socket.io');
 
 const app = express();
-const server = http.createServer(app); // Crea il server HTTP
-const io = socketIO(server, {
-  cors: {
-    origin: ['http://localhost:3000', 'https://gerico.netlify.app'], // Aggiungi qui i domini frontend
-    credentials: true,
-  },
-});
-
-// Middleware CORS per consentire solo gli origin corretti
+const server = http.createServer(app);
 const allowedOrigins = ['http://localhost:3000', 'https://gerico.netlify.app'];
+
+// Configurazione CORS per Express e Socket.IO
 app.use(cors({
   origin: function (origin, callback) {
-    if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
       callback(new Error('Non consentito da CORS'));
@@ -29,18 +23,25 @@ app.use(cors({
   credentials: true,
 }));
 
+const io = socketIO(server, {
+  cors: {
+    origin: allowedOrigins,
+    credentials: true,
+  },
+});
+
 // Middleware per gestire le richieste
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 // Sessioni
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'supersegreto', // Assicurati di avere una SESSION_SECRET nel tuo .env
+  secret: process.env.SESSION_SECRET || 'supersegreto',
   resave: false,
   saveUninitialized: false,
   cookie: {
     httpOnly: true,
-    secure: false, // Imposta a true se usi HTTPS
+    secure: false, // Metti true se usi HTTPS
     maxAge: 1000 * 60 * 60 * 24, // 1 giorno
   },
 }));
