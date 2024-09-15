@@ -11,13 +11,13 @@ const app = express();
 const server = http.createServer(app); // Crea il server HTTP
 const io = socketIO(server, {
   cors: {
-    origin: ['http://localhost:3000', 'https://66e6ee91bc17b4007ef08acb--gerico.netlify.app'], // Aggiungi qui i domini frontend
+    origin: ['http://localhost:3000', 'https://66e6f782af8a910431cd28ea--gerico.netlify.app'], // Aggiungi qui i domini frontend
     credentials: true,
   },
 });
 
 // Middleware CORS per consentire solo gli origin corretti
-const allowedOrigins = ['http://localhost:3000', 'https://66e6ee91bc17b4007ef08acb--gerico.netlify.app'];
+const allowedOrigins = ['http://localhost:3000', 'https://66e6f782af8a910431cd28ea--gerico.netlify.app'];
 app.use(cors({
   origin: function (origin, callback) {
     if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
