@@ -4,7 +4,7 @@ import { io } from 'socket.io-client';
 
 export const SocketContext = createContext();
 
-const socket = io(process.env.REACT_APP_API_URL ||'https://api.render.com/deploy/srv-crjedq2j1k6c73flonc0?key=zRmNPSvH9Rs/api', {
+const socket = io(process.env.REACT_APP_API_URL ||'http://localhost:5000', {
   withCredentials: true,
 });
 
