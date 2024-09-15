@@ -1,4 +1,3 @@
-// server.js
 require('dotenv').config();
 const express = require('express');
 const http = require('http'); // Importa il modulo HTTP
@@ -12,18 +11,29 @@ const app = express();
 const server = http.createServer(app); // Crea il server HTTP
 const io = socketIO(server, {
   cors: {
-    origin: 'http://localhost:3000', // Aggiorna con il tuo dominio frontend se necessario
+    origin: ['http://localhost:3000', 'https://66e6ee91bc17b4007ef08acb--gerico.netlify.app'], // Aggiungi qui i domini frontend
     credentials: true,
   },
 });
 
-// Middleware
+// Middleware CORS per consentire solo gli origin corretti
+const allowedOrigins = ['http://localhost:3000', 'https://66e6ee91bc17b4007ef08acb--gerico.netlify.app'];
 app.use(cors({
-  origin: 'http://localhost:3000',
+  origin: function (origin, callback) {
+    if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
+      callback(null, true);
+    } else {
+      callback(new Error('Non consentito da CORS'));
+    }
+  },
   credentials: true,
 }));
+
+// Middleware per gestire le richieste
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Sessioni
 app.use(session({
   secret: process.env.SESSION_SECRET || 'supersegreto', // Assicurati di avere una SESSION_SECRET nel tuo .env
   resave: false,
@@ -35,29 +45,30 @@ app.use(session({
   },
 }));
 
+// Passport.js per autenticazione
 app.use(passport.initialize());
 app.use(passport.session());
 
 // Configurazione Passport
 require('./config/passport')(passport);
 
-// Rotte
+// Rotte API
 const authRoutes = require('./routes/auth');
 const patientRoutes = require('./routes/patients');
-const aiRoutes = require('./routes/ai')(io); // Passiamo io qui
+const aiRoutes = require('./routes/ai')(io); // Passiamo io a aiRoutes
 
 app.use('/api/auth', authRoutes);
 app.use('/api/patients', patientRoutes);
 app.use('/api/ai', aiRoutes);
 
-// Connessione al database
+// Connessione a MongoDB
 mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 }).then(() => {
   console.log('Connesso al database MongoDB');
   
-  // Avvia il server
+  // Avvio del server
   const PORT = process.env.PORT || 5000;
   server.listen(PORT, () => {
     console.log(`Server in esecuzione sulla porta ${PORT}`);
@@ -66,7 +77,7 @@ mongoose.connect(process.env.MONGODB_URI, {
   console.error('Errore di connessione al database:', err);
 });
 
-// Gestisci la connessione Socket.IO
+// Gestione connessioni Socket.IO
 io.on('connection', (socket) => {
   console.log('Nuovo client connesso');
 
@@ -74,6 +85,3 @@ io.on('connection', (socket) => {
     console.log('Client disconnesso');
   });
 });
-
-// Non è più necessario esportare io
-// module.exports = { app, io };
