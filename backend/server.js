@@ -10,28 +10,28 @@ const socketIO = require('socket.io');
 const app = express();
 const server = http.createServer(app);
 
-// Array dei domini autorizzati
-const allowedOrigins = ['http://localhost:3000', 'https://gerico.netlify.app'];
+// Aggiungi qui i domini che vuoi autorizzare
+const allowedOrigins = ['http://localhost:3000', 'https://main--gerico.netlify.app'];
 
 // Middleware CORS per Express
 app.use(cors({
   origin: function (origin, callback) {
-    // Consenti richieste da domini autorizzati o richieste senza origin (come richieste preflight)
+    // Controlla se l'origine è nella lista consentita o se non ha un'origine (come nelle richieste da Postman o locali)
     if (!origin || allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
-      console.log(`Bloccato per CORS: ${origin}`); // Logging per debug
       callback(new Error('Non consentito da CORS'));
     }
   },
   credentials: true,
 }));
 
-// Socket.IO configurazione con CORS
+// CORS per Socket.IO
 const io = socketIO(server, {
   cors: {
-    origin: allowedOrigins,
-    credentials: true,
+    origin: allowedOrigins, // Usa la stessa lista di origini autorizzate
+    credentials: true, // Consenti l'invio di credenziali (come cookie e sessioni)
+    methods: ["GET", "POST"], // Limita i metodi consentiti
   },
 });
 
@@ -46,7 +46,7 @@ app.use(session({
   saveUninitialized: false,
   cookie: {
     httpOnly: true,
-    secure: false, // Cambia a true se usi HTTPS
+    secure: false, // Metti true se usi HTTPS
     maxAge: 1000 * 60 * 60 * 24, // 1 giorno
   },
 }));
@@ -73,7 +73,7 @@ mongoose.connect(process.env.MONGODB_URI, {
   useUnifiedTopology: true,
 }).then(() => {
   console.log('Connesso al database MongoDB');
-
+  
   // Avvio del server
   const PORT = process.env.PORT || 5000;
   server.listen(PORT, () => {
