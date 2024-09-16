@@ -1,12 +1,13 @@
+// server.js
 require('dotenv').config();
 const express = require('express');
-const http = require('http'); // Importa il modulo HTTP
+const http = require('http'); // Modulo HTTP
 const mongoose = require('mongoose');
 const session = require('express-session');
 const passport = require('passport');
 const cors = require('cors');
 const MongoStore = require('connect-mongo'); // Per gestire le sessioni con MongoDB
-const socketIO = require('socket.io'); // Importa Socket.IO
+const socketIO = require('socket.io'); // Modulo Socket.IO
 
 const app = express();
 const server = http.createServer(app); // Crea il server HTTP
@@ -99,4 +100,3 @@ io.on('connection', (socket) => {
     console.log('Client disconnesso');
   });
 });
-
