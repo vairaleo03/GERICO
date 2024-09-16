@@ -1,4 +1,3 @@
-// server.js
 require('dotenv').config();
 const express = require('express');
 const http = require('http'); // Importa il modulo HTTP
@@ -10,27 +9,38 @@ const socketIO = require('socket.io'); // Importa Socket.IO
 
 const app = express();
 const server = http.createServer(app); // Crea il server HTTP
-const io = socketIO(server, {
-  cors: {
-    origin: 'http://localhost:3000', // Aggiorna con il tuo dominio frontend se necessario
-    credentials: true,
-  },
-});
 
-// Middleware
+// Configura i domini permessi per il CORS
+const allowedOrigins = [
+  'http://localhost:3000', // Per sviluppo locale
+  'https://main--gerico.netlify.app', // Aggiungi il dominio del tuo frontend Netlify
+  'https://gerico.onrender.com', // Backend su Render (opzionale, solo per test interni)
+];
+
+// Middleware CORS
 app.use(cors({
-  origin: 'http://localhost:3000',
-  credentials: true,
+  origin: (origin, callback) => {
+    // Verifica se l'origine è permessa
+    if (allowedOrigins.includes(origin) || !origin) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true, // Consente l'invio di cookie e credenziali
 }));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Sessioni
 app.use(session({
   secret: process.env.SESSION_SECRET || 'supersegreto', // Assicurati di avere una SESSION_SECRET nel tuo .env
   resave: false,
   saveUninitialized: false,
   cookie: {
     httpOnly: true,
-    secure: false, // Imposta a true se usi HTTPS
+    secure: process.env.NODE_ENV === 'production', // Imposta a true se usi HTTPS
     maxAge: 1000 * 60 * 60 * 24, // 1 giorno
   },
 }));
@@ -63,6 +73,13 @@ mongoose.connect(process.env.MONGODB_URI)
     console.error('Errore di connessione al database:', err);
   });
 
+// Configurazione Socket.IO
+const io = socketIO(server, {
+  cors: {
+    origin: allowedOrigins, // Usa gli stessi domini definiti per CORS
+    credentials: true,
+  },
+});
 
 // Gestisci la connessione Socket.IO
 io.on('connection', (socket) => {
@@ -74,4 +91,3 @@ io.on('connection', (socket) => {
 });
 
 // Non è più necessario esportare io
-// module.exports = { app, io };
