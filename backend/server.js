@@ -1,4 +1,3 @@
-// server.js
 require('dotenv').config();
 const express = require('express');
 const http = require('http'); // Modulo HTTP
@@ -64,6 +63,19 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 require('./config/passport')(passport); // Configura passport con la strategia locale
+
+// Debug sessioni per vedere se vengono serializzate/deserializzate
+passport.serializeUser((user, done) => {
+  console.log('Serializzazione utente:', user);
+  done(null, user.id);
+});
+
+passport.deserializeUser((id, done) => {
+  User.findById(id, (err, user) => {
+    console.log('Deserializzazione utente:', user);
+    done(err, user);
+  });
+});
 
 // Definisci le rotte
 const authRoutes = require('./routes/auth');
