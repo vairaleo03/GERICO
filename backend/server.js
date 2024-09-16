@@ -1,3 +1,4 @@
+// server.js
 require('dotenv').config();
 const express = require('express');
 const http = require('http'); // Modulo HTTP
@@ -7,6 +8,7 @@ const passport = require('passport');
 const cors = require('cors');
 const MongoStore = require('connect-mongo'); // Per gestire le sessioni con MongoDB
 const socketIO = require('socket.io'); // Modulo Socket.IO
+const User = require('./models/User'); // Assicurati di importare il modello User
 
 const app = express();
 const server = http.createServer(app); // Crea il server HTTP
@@ -29,6 +31,9 @@ app.use(cors({
   },
   credentials: true,
 }));
+
+// **Imposta trust proxy**
+app.set('trust proxy', 1); // Necessario per riconoscere correttamente le richieste come sicure
 
 // Inizializza io con le stesse impostazioni CORS
 const io = socketIO(server, {
@@ -64,7 +69,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 require('./config/passport')(passport); // Configura passport con la strategia locale
 
-// Debug sessioni per vedere se vengono serializzate/deserializzate
+// **Aggiungi i console.log per il debug della serializzazione**
 passport.serializeUser((user, done) => {
   console.log('Serializzazione utente:', user);
   done(null, user.id);
