@@ -1,14 +1,14 @@
 require('dotenv').config();
 const express = require('express');
-const http = require('http'); // Importa il modulo HTTP
+const http = require('http'); // Modulo HTTP
 const mongoose = require('mongoose');
 const session = require('express-session');
 const passport = require('passport');
 const cors = require('cors');
-const socketIO = require('socket.io'); // Importa Socket.IO
+const socketIO = require('socket.io'); // Modulo Socket.IO
 
 const app = express();
-const server = http.createServer(app); // Crea il server HTTP
+const server = http.createServer(app); // Server HTTP
 
 // Configurazione delle origini consentite (dev e produzione)
 const allowedOrigins = [
@@ -24,6 +24,7 @@ app.use(cors({
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
+      console.error(`Accesso negato per l'origine: ${origin}`);
       callback(new Error('Non consentito per l\'origine specificata'));
     }
   },
@@ -33,21 +34,30 @@ app.use(cors({
 // Inizializza io prima dell'utilizzo con le stesse origini
 const io = socketIO(server, {
   cors: {
-    origin: allowedOrigins,
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Origine non consentita da socket.io'));
+      }
+    },
     credentials: true,
   },
 });
 
-// Middleware
+// Middleware sessioni
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Configurazione della sessione
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'supersegreto', // Assicurati di avere una SESSION_SECRET nel tuo .env
+  secret: process.env.SESSION_SECRET || 'supersegreto',
   resave: false,
   saveUninitialized: false,
   cookie: {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production', // Usa cookie sicuri solo in produzione
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // SameSite per cross-origin cookie
     maxAge: 1000 * 60 * 60 * 24, // 1 giorno
   },
 }));
@@ -68,7 +78,11 @@ app.use('/api/patients', patientRoutes);
 app.use('/api/ai', aiRoutes);
 
 // Connessione al database
-mongoose.connect(process.env.MONGODB_URI)
+mongoose.connect(process.env.MONGODB_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  useCreateIndex: true, // Abilita l'uso di indici in MongoDB, utile per performance
+})
   .then(() => {
     console.log('Connesso al database MongoDB');
     const PORT = process.env.PORT || 5000;
