@@ -5,7 +5,6 @@ module.exports = {
     if (req.isAuthenticated()) {
       return next();
     }
-    console.log('Utente non autenticato');
     res.status(401).json({ message: 'Non autorizzato' });
   },
 };
