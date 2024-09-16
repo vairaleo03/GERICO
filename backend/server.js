@@ -8,7 +8,7 @@ const cors = require('cors');
 const socketIO = require('socket.io'); // Modulo Socket.IO
 
 const app = express();
-const server = http.createServer(app); // Server HTTP
+const server = http.createServer(app); // Crea il server HTTP
 
 // Configurazione delle origini consentite (dev e produzione)
 const allowedOrigins = [
@@ -24,7 +24,6 @@ app.use(cors({
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      console.error(`Accesso negato per l'origine: ${origin}`);
       callback(new Error('Non consentito per l\'origine specificata'));
     }
   },
@@ -34,18 +33,12 @@ app.use(cors({
 // Inizializza io prima dell'utilizzo con le stesse origini
 const io = socketIO(server, {
   cors: {
-    origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error('Origine non consentita da socket.io'));
-      }
-    },
+    origin: allowedOrigins,
     credentials: true,
   },
 });
 
-// Middleware sessioni
+// Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
@@ -68,15 +61,6 @@ app.use(passport.session());
 // Configurazione Passport
 require('./config/passport')(passport);
 
-// Rotte (dopo l'inizializzazione di io)
-const authRoutes = require('./routes/auth');
-const patientRoutes = require('./routes/patients');
-const aiRoutes = require('./routes/ai')(io); // Ora io è disponibile
-
-app.use('/api/auth', authRoutes);
-app.use('/api/patients', patientRoutes);
-app.use('/api/ai', aiRoutes);
-
 // Connessione al database
 mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
@@ -85,6 +69,8 @@ mongoose.connect(process.env.MONGODB_URI, {
 })
   .then(() => {
     console.log('Connesso al database MongoDB');
+    
+    // Avvia il server dopo la connessione al database
     const PORT = process.env.PORT || 5000;
     server.listen(PORT, () => {
       console.log(`Server in esecuzione sulla porta ${PORT}`);
@@ -93,6 +79,15 @@ mongoose.connect(process.env.MONGODB_URI, {
   .catch(err => {
     console.error('Errore di connessione al database:', err);
   });
+
+// Rotte (dopo l'inizializzazione di io)
+const authRoutes = require('./routes/auth');
+const patientRoutes = require('./routes/patients');
+const aiRoutes = require('./routes/ai')(io); // Passiamo io qui ora che è inizializzato
+
+app.use('/api/auth', authRoutes);
+app.use('/api/patients', patientRoutes);
+app.use('/api/ai', aiRoutes);
 
 // Gestisci la connessione Socket.IO
 io.on('connection', (socket) => {
