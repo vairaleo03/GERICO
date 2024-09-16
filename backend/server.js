@@ -10,19 +10,35 @@ const socketIO = require('socket.io'); // Importa Socket.IO
 const app = express();
 const server = http.createServer(app); // Crea il server HTTP
 
-// Inizializza io prima dell'utilizzo
+// Configurazione delle origini consentite (dev e produzione)
+const allowedOrigins = [
+  'https://main--gerico.netlify.app',
+  'https://gerico.netlify.app', // Aggiungi anche questa se necessario
+  'http://localhost:3000' // Origine per sviluppo locale
+];
+
+// Middleware CORS dinamico per gestire più origini
+app.use(cors({
+  origin: (origin, callback) => {
+    // Controlla se l'origine è consentita
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Non consentito per l\'origine specificata'));
+    }
+  },
+  credentials: true,
+}));
+
+// Inizializza io prima dell'utilizzo con le stesse origini
 const io = socketIO(server, {
   cors: {
-    origin: 'https://main--gerico.netlify.app', // Cambia qui per il dominio di produzione
+    origin: allowedOrigins,
     credentials: true,
   },
 });
 
 // Middleware
-app.use(cors({
-  origin: 'https://main--gerico.netlify.app', // Cambia qui per il dominio di produzione
-  credentials: true,
-}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(session({
@@ -31,7 +47,7 @@ app.use(session({
   saveUninitialized: false,
   cookie: {
     httpOnly: true,
-    secure: true, // Imposta a true in produzione poiché usi HTTPS
+    secure: process.env.NODE_ENV === 'production', // Usa cookie sicuri solo in produzione
     maxAge: 1000 * 60 * 60 * 24, // 1 giorno
   },
 }));
