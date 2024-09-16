@@ -65,7 +65,6 @@ require('./config/passport')(passport);
 mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
-  useCreateIndex: true, // Abilita l'uso di indici in MongoDB, utile per performance
 })
   .then(() => {
     console.log('Connesso al database MongoDB');
