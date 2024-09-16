@@ -1,4 +1,3 @@
-// config/passport.js
 const LocalStrategy = require('passport-local').Strategy;
 const bcrypt = require('bcryptjs');
 const User = require('../models/User');
@@ -30,16 +29,15 @@ module.exports = function (passport) {
 
   // Serializzazione dell'utente
   passport.serializeUser((user, done) => {
+    console.log('Serializzazione utente:', user);
     done(null, user.id);
   });
 
   // Deserializzazione dell'utente
-  passport.deserializeUser(async (id, done) => {
-    try {
-      const user = await User.findById(id);
-      done(null, user);
-    } catch (err) {
-      done(err);
-    }
+  passport.deserializeUser((id, done) => {
+    User.findById(id, (err, user) => {
+      console.log('Deserializzazione utente:', user);
+      done(err, user);
+    });
   });
 };
