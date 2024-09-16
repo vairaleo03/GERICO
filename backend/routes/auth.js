@@ -1,6 +1,7 @@
+// routes/auth.js
 const express = require('express');
 const router = express.Router();
-const bcrypt = require('bcrypt');
+const bcryptjs = require('bcryptjs');
 const passport = require('passport');
 const User = require('../models/User');
 
@@ -8,39 +9,29 @@ const User = require('../models/User');
 router.post('/register', async (req, res) => {
   const { name, email, password } = req.body;
   try {
-    // Verifica se l'utente esiste già
     let user = await User.findOne({ email });
     if (user) {
       return res.status(400).json({ message: 'Email già registrata' });
     }
-
-    // Crea un nuovo utente con la password criptata
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcryptjs.hash(password, 10);
     user = new User({ name, email, password: hashedPassword });
     await user.save();
-
-    // Risposta di successo
-    res.status(201).json({ message: 'Utente registrato con successo' });
+    res.json({ message: 'Utente registrato con successo' });
   } catch (err) {
-    // Gestione degli errori di server
-    res.status(500).json({ message: 'Errore del server', error: err.message });
+    res.status(500).json({ message: 'Errore del server' });
   }
 });
 
 // Login
 router.post('/login', (req, res, next) => {
   passport.authenticate('local', (err, user, info) => {
-    if (err) return next(err);  // Gestione dell'errore nel middleware
+    if (err) return next(err);
     if (!user) {
-      return res.status(400).json({ message: 'Credenziali non valide' }); // Utente non trovato
+      return res.status(400).json({ message: 'Credenziali non valide' });
     }
-
-    // Login dell'utente
     req.logIn(user, err => {
-      if (err) return next(err);  // Gestione dell'errore nel login
+      if (err) return next(err);
       console.log('Login effettuato per l\'utente:', user);
-
-      // Risposta con i dettagli dell'utente
       res.json({
         message: 'Login effettuato con successo',
         user: { id: user._id, name: user.name, email: user.email },
@@ -50,9 +41,9 @@ router.post('/login', (req, res, next) => {
 });
 
 // Logout
-router.get('/logout', (req, res, next) => {
+router.get('/logout', (req, res) => {
   req.logout(err => {
-    if (err) return next(err);  // Gestione dell'errore nel logout
+    if (err) return next(err);
     res.json({ message: 'Logout effettuato con successo' });
   });
 });
