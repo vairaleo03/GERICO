@@ -3,15 +3,12 @@ import { io } from 'socket.io-client';
 
 export const SocketContext = createContext();
 
-// Verifica se siamo in ambiente di produzione o sviluppo
-const socketURL = process.env.NODE_ENV === 'production'
-  ? 'https://gerico.onrender.com' // URL di produzione
-  : 'http://localhost:5000'; // URL di sviluppo
-
-const socket = io(socketURL, {
-  withCredentials: true,
+// Imposta l'URL dell'API (backend) usando la variabile d'ambiente
+const socket = io(process.env.REACT_APP_API_URL || 'https://gerico.onrender.com', {
+  withCredentials: true, // Permette la condivisione delle credenziali tra frontend e backend
 });
 
+// SocketProvider per fornire il contesto a tutta l'app
 export const SocketProvider = ({ children }) => {
   return (
     <SocketContext.Provider value={socket}>
