@@ -1,0 +1,25 @@
+# backend/Dockerfile
+
+# Utilizza l'immagine ufficiale di Node.js LTS basata su Alpine per dimensioni ridotte
+FROM node:18-alpine
+
+# Imposta la directory di lavoro all'interno del container
+WORKDIR /app
+
+# Copia i file package.json e package-lock.json
+COPY package*.json ./
+
+# Installa le dipendenze
+RUN npm install --production
+
+# Copia il resto del codice del backend
+COPY . .
+
+# Esponi la porta su cui il backend sarà in ascolto
+EXPOSE 5000
+
+# Definisci la variabile d'ambiente per la porta
+ENV PORT=5000
+
+# Avvia il server backend
+CMD ["node", "server.js"]
