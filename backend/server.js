@@ -11,7 +11,11 @@ const socketIo = require('socket.io');
 const app = express();
 
 // Middleware per CORS e parsing JSON
-app.use(cors());
+app.use(cors({
+  origin: ['https://recyclesmart.netlify.app', 'http://localhost:3000'], // Aggiungi il tuo dominio Netlify e localhost per sviluppo
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true,
+}));
 app.use(express.json());
 
 // Inizializzazione di Passport
@@ -22,15 +26,16 @@ require('./config/passport')(passport);
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: '*', // Specifica l'URL del tuo frontend se necessario
+    origin: 'https://recyclesmart.netlify.app', // Aggiungi il tuo dominio Netlify
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    credentials: true,
   },
 });
 
 // Inizializza Socket.IO
 require('./sockets/index')(io);
 
-// Middleware per rendere `io` disponibile in `req.io`
+// Middleware per rendere io disponibile in req.io
 app.use((req, res, next) => {
   req.io = io;
   next();
@@ -48,7 +53,10 @@ app.use('/api/notifications', require('./routes/notifications'));
 
 // Connessione a MongoDB
 mongoose
-  .connect(process.env.MONGO_URI)
+  .connect(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
   .then(() => console.log('MongoDB connesso'))
   .catch((err) => console.log(err));
 
