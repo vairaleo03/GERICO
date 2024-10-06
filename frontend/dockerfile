@@ -1,0 +1,27 @@
+# frontend/Dockerfile
+
+# Usa un'immagine di Node.js per compilare l'app React
+FROM node:18-alpine as build
+
+# Imposta la directory di lavoro all'interno del container
+WORKDIR /app
+
+# Copia il package.json e il package-lock.json e installa le dipendenze
+COPY package*.json ./
+RUN npm install
+
+# Copia il resto dei file del frontend e costruisci l'app
+COPY . .
+RUN npm run build
+
+# Usa un'immagine Nginx per servire l'app React
+FROM nginx:alpine
+
+# Copia i file costruiti nell'immagine Nginx per essere serviti
+COPY --from=build /app/build /usr/share/nginx/html
+
+# Esponi la porta 3000 (lato container)
+EXPOSE 3000
+
+# Comando per avviare il server Nginx
+CMD ["nginx", "-g", "daemon off;"]
