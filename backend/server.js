@@ -12,7 +12,7 @@ const app = express();
 
 // Middleware per CORS e parsing JSON
 app.use(cors({
-  origin: ['https://recyclesmart.netlify.app', 'http://localhost:3000'], // Aggiungi il tuo dominio Netlify e localhost per sviluppo
+  origin: ['https://recyclesmart.netlify.app', 'http://localhost:3000'], // Aggiungi il tuo dominio Netlify e localhost per svilupp
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true,
 }));
